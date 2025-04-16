@@ -29,3 +29,8 @@ Este programa é um analisador léxico simples implementado em linguagem C. Ele 
 - Não há tratamento de **erros léxicos específicos**, apenas marca como `TOKEN_UNKNOWN`
 
 ---
+## Execução
+Compile o código com:
+
+    gcc analisador.c -o analisador
+    E execute com: ./analisador
