@@ -1,11 +1,16 @@
 #include "analisador.h"
 
+const char* keywords[] = {"if", "else", "while", "return", "int", "float"};
+const char* operators = "+-*/=%!<>&|";
+const char* delimiters = "();{},";
+const char* comment = "///**/";
+
 int is_letter(char c) {
-    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+    return isalpha(c);
 }
 
 int is_digit(char c) {
-    return c >= '0' && c <= '9';
+    return isdigit(c);
 }
 
 int is_keyword(const char* str) {
@@ -16,78 +21,154 @@ int is_keyword(const char* str) {
     return 0;
 }
 
-Token next_token(const char* src, int* index) {
+Token handle_eof() {
     Token token;
-    int i = 0;
-
-    memset(token.lexeme, 0, sizeof(token.lexeme)); // limpar lixo
-
-    // Verifica fim do código ANTES de tudo
-    if (src[*index] == '\0') {
-        token.type = TOKEN_EOF;
-        strcpy(token.lexeme, "EOF");
-        return token;
-    }
-
-    // Pular espaços
-    while (isspace(src[*index])) (*index)++;
-
-    // Verifica novamente fim após pular espaços
-    if (src[*index] == '\0') {
-        token.type = TOKEN_EOF;
-        strcpy(token.lexeme, "EOF");
-        return token;
-    }
-
-    if (is_letter(src[*index])) {
-        while (is_letter(src[*index]) || is_digit(src[*index])) {
-            token.lexeme[i++] = src[(*index)++];
+    token.type = TOKEN_EOF;
+    strcpy(token.lexeme, "EOF");
+    return token;
+}
+Token handle_comment(const char* src, int* index){
+    Token token;
+    if(src[*index] == '/' && src[*index + 1] == '/'){
+        while(src[*index] != '\n' && src[*index] != '\0')(*index)++;
+        return handle_comment(src, index);
+    } else if (src[*index] == '/' && src[*index + 1] == '*') {
+        // Comentário de bloco
+        (*index) += 2; // Avançar para o começo do comentário
+        while (!(src[*index] == '*' && src[*index + 1] == '/')) {
+            if (src[*index] == '\0') {
+                token.type = TOKEN_ERROR;
+                strcpy(token.lexeme, "Comentário não fechado");
+                return token;
+            }
+            (*index)++;
         }
-        token.lexeme[i] = '\0';
-        token.type = is_keyword(token.lexeme) ? TOKEN_KEYWORD : TOKEN_IDENTIFIER;
-    } else if (is_digit(src[*index])) {
+        (*index) += 2; // Pular os caracteres "*/"
+        return next_token(src, index); // Retorna o próximo token após o comentário
+    }
+}
+
+Token handle_numbers(const char* src, int* index) {
+    Token token = {TOKEN_INT, {0}};
+    int i = 0;
+    
+    while (is_digit(src[*index])) {
+        token.lexeme[i++] = src[(*index)++];
+    }
+    
+    // Verificar se há ponto decimal (para floats)
+    if (src[*index] == '.') {
+        token.lexeme[i++] = src[(*index)++];
         while (is_digit(src[*index])) {
             token.lexeme[i++] = src[(*index)++];
         }
-        token.lexeme[i] = '\0';
-        token.type = TOKEN_INT;
-    } else if (strchr(operators, src[*index])) {
-        char current = src[*index];
-        char next = src[*index + 1];
-    
-        // Verificar operadores compostos
-        if ((current == '=' && next == '=') ||
-            (current == '!' && next == '=') ||
-            (current == '<' && next == '=') ||
-            (current == '>' && next == '=') ||
-            (current == '+' && next == '+') ||
-            (current == '-' && next == '-') ||
-            (current == '&' && next == '&') ||
-            (current == '|' && next == '|')) {
-            
-            token.lexeme[0] = current;
-            token.lexeme[1] = next;
-            token.lexeme[2] = '\0';
-            *index += 2;
-        } else {
-            // operador simples
-            token.lexeme[0] = current;
-            token.lexeme[1] = '\0';
-            (*index)++;
+        token.type = TOKEN_FLOAT;
+    }
+    // Verificar se há letras após o número (erro léxico)
+    else if (is_letter(src[*index])) {
+        // Coletar toda a sequência inválida
+        while (is_letter(src[*index]) || is_digit(src[*index])) {
+            if (i < sizeof(token.lexeme) - 1) {  // Prevenir buffer overflow
+                token.lexeme[i++] = src[(*index)++];
+            }
         }
+        token.lexeme[i] = '\0';
+        token.type = TOKEN_UNKNOWN;  // Marcar como erro léxico
+        return token;
+    }
     
-        token.type = TOKEN_OPERATOR;
-    } else if (strchr(delimiters, src[*index])) {
-        token.lexeme[0] = src[(*index)++];
-        token.lexeme[1] = '\0';
-        token.type = TOKEN_DELIMITER;
-    } else {
-        token.lexeme[0] = src[(*index)++];
-        token.lexeme[1] = '\0';
-        token.type = TOKEN_UNKNOWN;
+    token.lexeme[i] = '\0';
+    return token;
+}
+
+Token handle_identifiers(const char* src, int* index) {
+    Token token = {TOKEN_IDENTIFIER, {0}};
+    int i = 0;
+
+    if (!is_letter(src[*index])) {
+        return handle_unknown(src, index);
     }
 
+    token.lexeme[i++] = src[(*index)++];
+    
+    while (is_letter(src[*index]) || is_digit(src[*index])) {
+        token.lexeme[i++] = src[(*index)++];
+    }
+
+    token.lexeme[i] = '\0';
+    token.type = is_keyword(token.lexeme) ? TOKEN_KEYWORD : TOKEN_IDENTIFIER;
     return token;
+}
+
+Token handle_operators(const char* src, int* index) {
+    Token token = {TOKEN_OPERATOR, {0}};
+    char current = src[*index];
+    char next = src[*index + 1];
+    int i = 0;
+    
+    token.lexeme[i++] = current;
+    
+    // Verificar operadores compostos
+    if ((current == '=' && next == '=') ||
+        (current == '!' && next == '=') ||
+        (current == '<' && next == '=') ||
+        (current == '>' && next == '=') ||
+        (current == '+' && next == '+') ||
+        (current == '-' && next == '-') ||
+        (current == '&' && next == '&') ||
+        (current == '|' && next == '|')) {
+        
+        token.lexeme[i++] = next;
+        (*index)++;
+    }
+    
+    token.lexeme[i] = '\0';
+    (*index)++;
+    return token;
+}
+
+Token handle_delimiters(const char* src, int* index) {
+    Token token = {TOKEN_DELIMITER, {0}};
+    token.lexeme[0] = src[(*index)++];
+    token.lexeme[1] = '\0';
+    return token;
+}
+
+Token handle_unknown(const char* src, int* index) {
+    Token token = {TOKEN_UNKNOWN, {0}};
+    token.lexeme[0] = src[(*index)++];
+    token.lexeme[1] = '\0';
+    return token;
+}
+
+Token next_token(const char* src, int* index) {
+    // Pular espaços
+    while (isspace(src[*index])) (*index)++;
+
+    // Verificar EOF
+    if (src[*index] == '\0') {
+        return handle_eof();
+    }
+
+    // Determinar o tipo de token
+    if (is_digit(src[*index])) {
+        return handle_numbers(src, index);
+    }
+    else if (is_letter(src[*index])) {
+        return handle_identifiers(src, index);
+    }
+    else if (strchr(operators, src[*index])) {
+        return handle_operators(src, index);
+    }
+    else if (strchr(delimiters, src[*index])) {
+        return handle_delimiters(src, index);
+    }
+    else if(strchr(comment, src[*index])){
+        return handle_comment(src,index);
+    }
+    else {
+        return handle_unknown(src, index);
+    }
 }
 
 

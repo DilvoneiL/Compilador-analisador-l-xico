@@ -13,6 +13,7 @@ typedef enum {
     TOKEN_OPERATOR,   // tipo novo
     TOKEN_DELIMITER,  // tipo novo
     TOKEN_EOF,
+    TOKEN_ERROR,
     TOKEN_UNKNOWN
 } TokenType;
 
@@ -22,7 +23,15 @@ typedef struct {
     char lexeme[100]; // conteúdo real do token
 } Token;
 
-const char* keywords[] = {"if", "else", "while", "return", "int", "float"};
-const char* operators = "+-*/=%!<>&|";
-const char* delimiters = "();{},";
-
+int is_letter(char c);
+int is_digit(char c);
+int is_keyword(const char* str);
+Token handle_eof();
+Token handle_numbers(const char* src, int* index);
+Token handle_identifiers(const char* src, int* index);
+Token handle_operators(const char* src, int* index);
+Token handle_delimiters(const char* src, int* index);
+Token handle_unknown(const char* src, int* index);
+Token handle_comment(const char* src, int* index);
+Token next_token(const char* src, int* index);
+const char* token_type_to_string(TokenType type);
