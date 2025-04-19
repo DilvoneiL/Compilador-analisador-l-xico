@@ -28,7 +28,7 @@ Este programa é um analisador léxico simples implementado em linguagem C. Ele 
 
 ---
 ## Execução
-Compile o código com:
+Compile e execute o código com :
 
     gcc analisador.c -o analisador
-    E execute com: ./analisador
+    ./analisador
