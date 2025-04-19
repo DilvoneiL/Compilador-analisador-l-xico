@@ -17,6 +17,7 @@ Este programa é um analisador léxico simples implementado em linguagem C. Ele 
 - `TOKEN_OPERATOR` – Operadores simples e compostos (`=`, `==`, `!=`, `+`, `++`, `>=`, etc.)
 - `TOKEN_DELIMITER` – Delimitadores como `(`, `)`, `{`, `}`, `;`, `,`
 - `TOKEN_EOF` – Fim do arquivo
+- `TOKEN_COMMENT` – Comentarios em linha e bloco `(`//`)`, `{`/**/`}`,
 - `TOKEN_UNKNOWN` – Qualquer caractere não reconhecido
 
 ---
