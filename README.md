@@ -23,9 +23,7 @@ Este programa é um analisador léxico simples implementado em linguagem C. Ele 
 
 ## Limitações
 
-- Ainda **não reconhece números do tipo `float`** (como `3.14`)
 - Não faz o reconhecimento de **strings** (`"texto"`) ou **caracteres** (`'a'`)
-- **Comentários** (`//` ou `/* */`) não são ignorados e podem causar erro
 - Não há tratamento de **erros léxicos específicos**, apenas marca como `TOKEN_UNKNOWN`
 
 ---
