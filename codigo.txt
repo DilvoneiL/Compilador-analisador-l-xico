@@ -2,7 +2,7 @@ int x2 = 10;
 float y = 3.14;
 char c = 'a';
 if (x == 10) {
-    // Comentário simples
-    /* Comentário em bloco */
+    // simples
+    /* em bloco */
     printf("Texto");
 }

@@ -14,6 +14,7 @@ typedef enum {
     TOKEN_DELIMITER,  // tipo novo
     TOKEN_EOF,
     TOKEN_ERROR,
+    TOKEN_COMMENT,
     TOKEN_UNKNOWN
 } TokenType;
 
@@ -32,6 +33,7 @@ Token handle_identifiers(const char* src, int* index);
 Token handle_operators(const char* src, int* index);
 Token handle_delimiters(const char* src, int* index);
 Token handle_unknown(const char* src, int* index);
-Token handle_comment(const char* src, int* index);
+Token handle_line_comment(const char* src, int* index);
+Token handle_block_comment(const char* src, int* index);
 Token next_token(const char* src, int* index);
 const char* token_type_to_string(TokenType type);
