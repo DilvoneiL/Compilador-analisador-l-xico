@@ -13,7 +13,6 @@ typedef enum {
     TOKEN_OPERATOR,   // tipo novo
     TOKEN_DELIMITER,  // tipo novo
     TOKEN_EOF,
-    TOKEN_ERROR,
     TOKEN_COMMENT,
     TOKEN_UNKNOWN
 } TokenType;
