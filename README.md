@@ -11,7 +11,7 @@ Ano: 2025
 
 Este programa é um analisador léxico simples implementado em linguagem C. Ele realiza a leitura de um código-fonte contido em um arquivo `.txt` e identifica os **tokens** presentes no texto, classificando-os nas seguintes categorias:
 
-- `TOKEN_KEYWORD` – Palavras-chave (ex: `int`, `if`, `while`, `return`)
+- `TOKEN_KEYWORD` – Palavras-chave (ex: `int`, `if`, `while`,`for`, `return`)
 - `TOKEN_IDENTIFIER` – Identificadores (nomes de variáveis e funções)
 - `TOKEN_INT` – Números inteiros
 - `TOKEN_OPERATOR` – Operadores simples e compostos (`=`, `==`, `!=`, `+`, `++`, `>=`, etc.)

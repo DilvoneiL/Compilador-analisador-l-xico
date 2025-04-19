@@ -1,6 +1,6 @@
 #include "analisador.h"
 
-const char* keywords[] = {"if", "else", "while", "return", "int", "float"};
+const char* keywords[] = {"if", "else", "while","for","return", "int", "float"};
 const char* operators = "+-*/=%!<>&|";
 const char* delimiters = "();{},";
 

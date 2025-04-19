@@ -5,4 +5,8 @@ if (x == 10) {
     // simples
     /* em bloco */
     printf("Texto");
+    for(int i = 0; i < x; i++){
+       //laço
+    }
+
 }
