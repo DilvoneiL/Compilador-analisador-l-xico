@@ -14,6 +14,7 @@ Este programa é um analisador léxico simples implementado em linguagem C. Ele 
 - `TOKEN_KEYWORD` – Palavras-chave (ex: `int`, `if`, `while`,`for`, `return`)
 - `TOKEN_IDENTIFIER` – Identificadores (nomes de variáveis e funções)
 - `TOKEN_INT` – Números inteiros
+- `TOKEN_FLOAT` – Números com ponto flutuante,
 - `TOKEN_OPERATOR` – Operadores simples e compostos (`=`, `==`, `!=`, `+`, `++`, `>=`, etc.)
 - `TOKEN_DELIMITER` – Delimitadores como `(`, `)`, `{`, `}`, `;`, `,`
 - `TOKEN_EOF` – Fim do arquivo
