@@ -3,6 +3,8 @@
 const char* keywords[] = {"if", "else", "while","for","return", "int", "float"};
 const char* operators = "+-*/=%!<>&|";
 const char* delimiters = "();{},";
+const char string_delimiter = '\"';
+const char char_delimiter = '\'';
 
 int is_letter(char c) {
     return isalpha(c);
@@ -26,6 +28,56 @@ Token handle_eof() {
     strcpy(token.lexeme, "EOF");
     return token;
 }
+
+// Função para lidar com strings
+Token handle_string(const char* src, int* index) {
+    Token token = {TOKEN_STRING, {0}};
+    int i = 0;
+    char delimiter = src[(*index)++]; // Pega o delimitador (" ou ')
+    
+    token.lexeme[i++] = delimiter; // Armazena o delimitador inicial
+    
+    while (src[*index] != delimiter && src[*index] != '\0') {
+        // Tratar caracteres escapados
+        if (src[*index] == '\\') {
+            if (i < sizeof(token.lexeme) - 1) {
+                token.lexeme[i++] = src[(*index)++]; // Armazena a barra invertida
+            }
+            if (src[*index] != '\0' && i < sizeof(token.lexeme) - 1) {
+                token.lexeme[i++] = src[(*index)++]; // Armazena o caractere escapado
+            }
+        } else {
+            if (i < sizeof(token.lexeme) - 1) {
+                token.lexeme[i++] = src[(*index)++];
+            } else {
+                (*index)++;
+            }
+        }
+    }
+    
+    // Verifica se encontrou o delimitador de fechamento
+    if (src[*index] == delimiter) {
+        if (i < sizeof(token.lexeme) - 1) {
+            token.lexeme[i++] = src[(*index)++]; // Armazena o delimitador final
+        } else {
+            (*index)++;
+        }
+    } else {
+        token.type = TOKEN_UNKNOWN; // String não fechada
+    }
+    
+    token.lexeme[i] = '\0';
+    
+    // Determina se é string ou char baseado no delimitador e tamanho
+    if (delimiter == '\'' && i == 3) { // 'a' format
+        token.type = TOKEN_CHAR;
+    } else if (delimiter == '\'' && i != 3) {
+        token.type = TOKEN_UNKNOWN; // Char inválido (muito longo)
+    }
+    
+    return token;
+}
+
 Token handle_line_comment(const char* src, int* index) {
     Token token = {TOKEN_COMMENT, {0}};
     int i = 0;
@@ -194,6 +246,9 @@ Token next_token(const char* src, int* index) {
     if (src[*index] == '/' && src[*index + 1] == '/') {
         return handle_line_comment(src, index);
     }
+    else if (src[*index] == '\"' || src[*index] == '\'') {
+        return handle_string(src, index);
+    }
     else if (src[*index] == '/' && src[*index + 1] == '*') {
         return handle_block_comment(src, index);
     }
@@ -223,6 +278,8 @@ const char* token_type_to_string(TokenType type) {
         case TOKEN_KEYWORD: return "TOKEN_KEYWORD";
         case TOKEN_OPERATOR: return "TOKEN_OPERATOR";
         case TOKEN_DELIMITER: return "TOKEN_DELIMITER";
+        case TOKEN_STRING: return "TOKEN_STRING";
+        case TOKEN_CHAR: return "TOKEN_CHAR";
         case TOKEN_EOF: return "TOKEN_EOF";
         case TOKEN_COMMENT: return "TOKEN_COMMENT";
         default: return "TOKEN_UNKNOWN";

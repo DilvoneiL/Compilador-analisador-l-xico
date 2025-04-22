@@ -9,9 +9,11 @@ typedef enum {
     TOKEN_INT,
     TOKEN_FLOAT,
     TOKEN_IDENTIFIER,
+    TOKEN_STRING,
+    TOKEN_CHAR,
     TOKEN_KEYWORD,
-    TOKEN_OPERATOR,   // tipo novo
-    TOKEN_DELIMITER,  // tipo novo
+    TOKEN_OPERATOR,  
+    TOKEN_DELIMITER,  
     TOKEN_EOF,
     TOKEN_COMMENT,
     TOKEN_UNKNOWN

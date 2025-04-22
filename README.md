@@ -11,22 +11,42 @@ Ano: 2025
 
 Este programa é um analisador léxico simples implementado em linguagem C. Ele realiza a leitura de um código-fonte contido em um arquivo `.txt` e identifica os **tokens** presentes no texto, classificando-os nas seguintes categorias:
 
-- `TOKEN_KEYWORD` – Palavras-chave (ex: `int`, `if`, `while`,`for`, `return`)
-- `TOKEN_IDENTIFIER` – Identificadores (nomes de variáveis e funções)
-- `TOKEN_INT` – Números inteiros
-- `TOKEN_FLOAT` – Números com ponto flutuante,
-- `TOKEN_OPERATOR` – Operadores simples e compostos (`=`, `==`, `!=`, `+`, `++`, `>=`, etc.)
-- `TOKEN_DELIMITER` – Delimitadores como `(`, `)`, `{`, `}`, `;`, `,`
-- `TOKEN_EOF` – Fim do arquivo
-- `TOKEN_COMMENT` – Comentarios em linha e bloco `//`,`/**/`
-- `TOKEN_UNKNOWN` – Qualquer caractere não reconhecido
+### Categorias de Tokens Reconhecidos
+
+| Tipo de Token         | Exemplos                                  |
+|-----------------------|-------------------------------------------|
+| `TOKEN_KEYWORD`       | `if`, `else`, `while`, `for`, `return`, `int`, `float` |
+| `TOKEN_IDENTIFIER`    | Nomes de variáveis e funções              |
+| `TOKEN_INT`           | Números inteiros (`123`, `-456`)          |
+| `TOKEN_FLOAT`         | Números decimais (`3.14`, `-0.001`)       |
+| `TOKEN_STRING`        | Strings entre aspas (`"texto"`)           |
+| `TOKEN_CHAR`          | Caracteres entre aspas simples (`'a'`)    |
+| `TOKEN_OPERATOR`      | `+`, `-`, `*`, `/`, `=`, `==`, `!=`, `<`, `>`, `<=`, `>=`, `&&`, `||`, `++`, `--` |
+| `TOKEN_DELIMITER`     | `(`, `)`, `{`, `}`, `;`, `,`             |
+| `TOKEN_COMMENT`       | `// comentário`, `/* comentário */`       |
+| `TOKEN_EOF`           | Fim do arquivo                            |
+| `TOKEN_UNKNOWN`       | Caracteres não reconhecidos               |
 
 ---
 
-## Limitações
+## Limitações Conhecidas
 
-- Não faz o reconhecimento de **strings** (`"texto"`) ou **caracteres** (`'a'`)
-- Não há tratamento de **erros léxicos específicos**, apenas marca como `TOKEN_UNKNOWN`
+### Strings e Caracteres
+- Sequências de escape (`\n`, `\t`, `\"`, etc.) não são totalmente suportadas
+- Caracteres multibyte/não-ASCII podem causar problemas
+- Strings que quebram linhas não são tratadas corretamente
+
+### Números
+- Não suporta notação científica (`1.23e-4`)
+- Não reconhece números hexadecimais (`0xFF`) ou octais (`077`)
+- Números com múltiplos pontos (`123.45.67`) não são detectados como erro
+
+### Outras Limitações
+- Tamanho máximo fixo para lexemas (100 caracteres)
+- Não guarda posição (linha/coluna) dos tokens para mensagens de erro
+- Tratamento de erros genérico (apenas marca como `TOKEN_UNKNOWN`)
+- Não suporta diretivas de pré-processador (`#include`, `#define`)
+- Não reconhece todos os operadores compostos (`+=`, `-=`, etc.)
 
 ---
 ## Execução
