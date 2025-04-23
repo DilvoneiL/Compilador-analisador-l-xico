@@ -6,8 +6,19 @@ const char* delimiters = "();{},";
 const char string_delimiter = '\"';
 const char char_delimiter = '\'';
 
+Position current_pos = {1, 1}; // Inicia na linha 1, coluna 1
+
+void update_position(char c) {
+    if (c == '\n') {
+        current_pos.line++;
+        current_pos.column = 1;
+    } else {
+        current_pos.column++;
+    }
+}
+
 int is_letter(char c) {
-    return isalpha(c);
+    return isalpha(c) || c == '_'; // Adicionado suporte a underscore
 }
 
 int is_digit(char c) {
@@ -22,64 +33,70 @@ int is_keyword(const char* str) {
     return 0;
 }
 
-Token handle_eof() {
+
+Token handle_eof(Position start_pos) {
     Token token;
     token.type = TOKEN_EOF;
     strcpy(token.lexeme, "EOF");
+    token.line = start_pos.line;
+    token.column = start_pos.column;
     return token;
 }
 
-// Função para lidar com strings
-Token handle_string(const char* src, int* index) {
-    Token token = {TOKEN_STRING, {0}};
+Token handle_string(const char* src, int* index, Position start_pos) {
+    Token token = {TOKEN_STRING, {0}, start_pos.line, start_pos.column};
     int i = 0;
-    char delimiter = src[(*index)++]; // Pega o delimitador (" ou ')
+    char delimiter = src[(*index)++];
+    update_position(delimiter);
     
-    token.lexeme[i++] = delimiter; // Armazena o delimitador inicial
+    token.lexeme[i++] = delimiter;
     
     while (src[*index] != delimiter && src[*index] != '\0') {
-        // Tratar caracteres escapados
         if (src[*index] == '\\') {
             if (i < sizeof(token.lexeme) - 1) {
-                token.lexeme[i++] = src[(*index)++]; // Armazena a barra invertida
+                token.lexeme[i++] = src[(*index)++];
+                update_position('\\');
             }
             if (src[*index] != '\0' && i < sizeof(token.lexeme) - 1) {
-                token.lexeme[i++] = src[(*index)++]; // Armazena o caractere escapado
+                token.lexeme[i++] = src[(*index)++];
+                update_position(token.lexeme[i-1]);
             }
         } else {
             if (i < sizeof(token.lexeme) - 1) {
                 token.lexeme[i++] = src[(*index)++];
+                update_position(token.lexeme[i-1]);
             } else {
                 (*index)++;
+                update_position(src[*index - 1]);
             }
         }
     }
     
-    // Verifica se encontrou o delimitador de fechamento
     if (src[*index] == delimiter) {
         if (i < sizeof(token.lexeme) - 1) {
-            token.lexeme[i++] = src[(*index)++]; // Armazena o delimitador final
+            token.lexeme[i++] = src[(*index)++];
+            update_position(delimiter);
         } else {
             (*index)++;
+            update_position(delimiter);
         }
     } else {
-        token.type = TOKEN_UNKNOWN; // String não fechada
+        token.type = TOKEN_UNKNOWN;
     }
     
     token.lexeme[i] = '\0';
     
-    // Determina se é string ou char baseado no delimitador e tamanho
-    if (delimiter == '\'' && i == 3) { // 'a' format
+    if (delimiter == '\'' && i == 3) {
         token.type = TOKEN_CHAR;
     } else if (delimiter == '\'' && i != 3) {
-        token.type = TOKEN_UNKNOWN; // Char inválido (muito longo)
+        token.type = TOKEN_UNKNOWN;
     }
     
     return token;
 }
 
-Token handle_line_comment(const char* src, int* index) {
-    Token token = {TOKEN_COMMENT, {0}};
+Token handle_line_comment(const char* src, int* index, Position start_pos ) {
+    Token token = {TOKEN_COMMENT, {0}, start_pos.line, start_pos.column};
     int i = 0;
     
     // Adiciona os '//' iniciais
@@ -87,16 +104,14 @@ Token handle_line_comment(const char* src, int* index) {
     token.lexeme[i++] = src[(*index)++];
     
     // Captura até o final da linha (incluindo o '\n')
-    while (src[*index] != '\n' && src[*index] != '\0') {
-        if (i < sizeof(token.lexeme) - 1) {
-            token.lexeme[i++] = src[(*index)++];
-        } else {
-            (*index)++;
-        }
+    while (src[*index] != '\n' && src[*index] != '\0' && i < sizeof(token.lexeme) - 1) {
+        token.lexeme[i++] = src[(*index)++];
     }
     
     // Inclui a quebra de linha no token
     if (src[*index] == '\n' && i < sizeof(token.lexeme) - 1) {
+        update_position('\n'); 
+        //(*index)++;
         token.lexeme[i++] = src[(*index)++];
     }
     
@@ -104,27 +119,34 @@ Token handle_line_comment(const char* src, int* index) {
     return token;
 }
 
-Token handle_block_comment(const char* src, int* index) {
-    Token token = {TOKEN_COMMENT, {0}};
+
+Token handle_block_comment(const char* src, int* index, Position start_pos) {
+    Token token = {TOKEN_COMMENT, {0}, start_pos.line, start_pos.column};
     int i = 0;
     
     // Adiciona o '/*' inicial
     token.lexeme[i++] = src[(*index)++];
+    update_position('/');
     token.lexeme[i++] = src[(*index)++];
+    update_position('*');
     
     // Consome até encontrar '*/'
     while (!(src[*index] == '*' && src[*index + 1] == '/') && src[*index] != '\0') {
         if (i < sizeof(token.lexeme) - 1) {
             token.lexeme[i++] = src[(*index)++];
+            update_position(token.lexeme[i-1]);
         } else {
             (*index)++;
+            update_position(src[*index-1]);
         }
     }
     
     // Verifica se encontrou o fechamento
     if (src[*index] == '*' && src[*index + 1] == '/') {
         token.lexeme[i++] = src[(*index)++];
+        update_position('*');
         token.lexeme[i++] = src[(*index)++];
+        update_position('/');
     } else {
         token.type = TOKEN_UNKNOWN; // Comentário não fechado
     }
@@ -133,32 +155,35 @@ Token handle_block_comment(const char* src, int* index) {
     return token;
 }
 
-Token handle_numbers(const char* src, int* index) {
-    Token token = {TOKEN_INT, {0}};
+Token handle_numbers(const char* src, int* index, Position start_pos) {
+    Token token = {TOKEN_INT, {0}, start_pos.line, start_pos.column};
     int i = 0;
     
     while (is_digit(src[*index])) {
         token.lexeme[i++] = src[(*index)++];
+        update_position(token.lexeme[i-1]);
     }
     
-    // Verificar se há ponto decimal (para floats)
+    // Verificar ponto decimal (para floats)
     if (src[*index] == '.') {
         token.lexeme[i++] = src[(*index)++];
+        update_position('.');
         while (is_digit(src[*index])) {
             token.lexeme[i++] = src[(*index)++];
+            update_position(token.lexeme[i-1]);
         }
         token.type = TOKEN_FLOAT;
     }
-    // Verificar se há letras após o número (erro léxico)
+    // Verificar letras após número (erro léxico)
     else if (is_letter(src[*index])) {
-        // Coletar toda a sequência inválida
         while (is_letter(src[*index]) || is_digit(src[*index])) {
-            if (i < sizeof(token.lexeme) - 1) {  // Prevenir buffer overflow
+            if (i < sizeof(token.lexeme) - 1) {
                 token.lexeme[i++] = src[(*index)++];
+                update_position(token.lexeme[i-1]);
             }
         }
         token.lexeme[i] = '\0';
-        token.type = TOKEN_UNKNOWN;  // Marcar como erro léxico
+        token.type = TOKEN_UNKNOWN;
         return token;
     }
     
@@ -166,18 +191,20 @@ Token handle_numbers(const char* src, int* index) {
     return token;
 }
 
-Token handle_identifiers(const char* src, int* index) {
-    Token token = {TOKEN_IDENTIFIER, {0}};
+Token handle_identifiers(const char* src, int* index, Position start_pos) {
+    Token token = {TOKEN_IDENTIFIER, {0}, start_pos.line, start_pos.column};
     int i = 0;
 
     if (!is_letter(src[*index])) {
-        return handle_unknown(src, index);
+        return handle_unknown(src, index, start_pos);
     }
 
     token.lexeme[i++] = src[(*index)++];
+    update_position(token.lexeme[i-1]);
     
     while (is_letter(src[*index]) || is_digit(src[*index])) {
         token.lexeme[i++] = src[(*index)++];
+        update_position(token.lexeme[i-1]);
     }
 
     token.lexeme[i] = '\0';
@@ -185,19 +212,20 @@ Token handle_identifiers(const char* src, int* index) {
     return token;
 }
 
-Token handle_operators(const char* src, int* index) {
-    Token token = {TOKEN_OPERATOR, {0}};
+Token handle_operators(const char* src, int* index, Position start_pos) {
+    Token token = {TOKEN_OPERATOR, {0}, start_pos.line, start_pos.column};
     char current = src[*index];
     char next = src[*index + 1];
     int i = 0;
     
     token.lexeme[i++] = current;
+    
     // Verifica comentários antes de operadores
     if (current == '/' && next == '/') {
-        return handle_line_comment(src, index);
+        return handle_line_comment(src, index, start_pos);
     }
     else if (current == '/' && next == '*') {
-        return handle_block_comment(src, index);
+        return handle_block_comment(src, index, start_pos);
     }
 
     // Verificar operadores compostos
@@ -212,60 +240,75 @@ Token handle_operators(const char* src, int* index) {
         
         token.lexeme[i++] = next;
         (*index)++;
+        update_position(next);
     }
     
     token.lexeme[i] = '\0';
     (*index)++;
+    update_position(current);
     return token;
 }
 
-Token handle_delimiters(const char* src, int* index) {
-    Token token = {TOKEN_DELIMITER, {0}};
+Token handle_delimiters(const char* src, int* index, Position start_pos) {
+    Token token = {TOKEN_DELIMITER, {0}, start_pos.line, start_pos.column};
     token.lexeme[0] = src[(*index)++];
+    update_position(token.lexeme[0]);
     token.lexeme[1] = '\0';
     return token;
 }
 
-Token handle_unknown(const char* src, int* index) {
-    Token token = {TOKEN_UNKNOWN, {0}};
+Token handle_unknown(const char* src, int* index, Position start_pos) {
+    Token token = {TOKEN_UNKNOWN, {0}, start_pos.line, start_pos.column};
     token.lexeme[0] = src[(*index)++];
+    update_position(token.lexeme[0]);
     token.lexeme[1] = '\0';
     return token;
 }
 
 Token next_token(const char* src, int* index) {
+    
     // Pular espaços
-    while (isspace(src[*index])) (*index)++;
-
+    // E na função next_token, modifique a parte que lida com espaços:
+    while (isspace(src[*index])) {
+        if (src[*index] == '\n') {
+            current_pos.line++;
+            current_pos.column = 1;
+        } else {
+            current_pos.column++;
+        }
+        (*index)++;
+    }
+    
+    Position start_pos = current_pos;
     // Verificar EOF
     if (src[*index] == '\0') {
-        return handle_eof();
+        return handle_eof(start_pos);
     }
 
         // Determinar o tipo de token
     if (src[*index] == '/' && src[*index + 1] == '/') {
-        return handle_line_comment(src, index);
+        return handle_line_comment(src, index, start_pos);
     }
     else if (src[*index] == '\"' || src[*index] == '\'') {
-        return handle_string(src, index);
+        return handle_string(src, index, start_pos);
     }
     else if (src[*index] == '/' && src[*index + 1] == '*') {
-        return handle_block_comment(src, index);
+        return handle_block_comment(src, index, start_pos);
     }
     else if (is_digit(src[*index])) {
-        return handle_numbers(src, index);
+        return handle_numbers(src, index, start_pos);
     }
     else if (is_letter(src[*index])) {
-        return handle_identifiers(src, index);
+        return handle_identifiers(src, index, start_pos);
     }
     else if (strchr(operators, src[*index])) {
-        return handle_operators(src, index);
+        return handle_operators(src, index, start_pos);
     }
     else if (strchr(delimiters, src[*index])) {
-        return handle_delimiters(src, index);
+        return handle_delimiters(src, index, start_pos);
     }
     else {
-        return handle_unknown(src, index);
+        return handle_unknown(src, index, start_pos);
     }
 }
 
@@ -303,10 +346,11 @@ int main() {
     int index = 0;
     Token token;
 
-    do {
+    while (token.type != TOKEN_EOF) {
         token = next_token(source, &index);
-        printf("Token: %-30s | Tipo: %s\n", token.lexeme, token_type_to_string(token.type));
-    } while (token.type != TOKEN_EOF);
+        printf("Token: %-30s | Tipo: %-15s | Linha: %-4d | Coluna: %-4d\n", 
+               token.lexeme, token_type_to_string(token.type), token.line, token.column);
+    }
 
     return 0;
 }
