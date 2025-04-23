@@ -333,6 +333,8 @@ const char* token_type_to_string(TokenType type) {
 
 int main() {
     FILE* file = fopen("codigo.txt", "r");
+    FILE* saida = fopen("saida.txt", "w");
+
     if (file == NULL) {
         printf("Erro ao abrir o arquivo.\n");
         return 1;
@@ -350,6 +352,8 @@ int main() {
         token = next_token(source, &index);
         printf("Token: %-30s | Tipo: %-15s | Linha: %-4d | Coluna: %-4d\n", 
                token.lexeme, token_type_to_string(token.type), token.line, token.column);
+        fprintf(saida,"Token: %-30s | Tipo: %-15s | Linha: %-4d | Coluna: %-4d\n", 
+               token.lexeme, token_type_to_string(token.type), token.line, token.column);     
     }
 
     return 0;
