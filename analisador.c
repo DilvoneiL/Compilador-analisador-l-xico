@@ -1,8 +1,6 @@
-#include "analisador.h" 
-#include "parser.h"     
-#include <stdio.h> 
+#include "analisador.h"
 
-const char* keywords[] = {"if", "else", "while", "for", "return", "int", "float", "char", "fun", "main", "void"};
+const char* keywords[] = {"if", "else", "while","for","return", "int", "float"};
 const char* operators = "+-*/=%!<>&|";
 const char* delimiters = "();{},";
 const char string_delimiter = '\"';
@@ -333,36 +331,26 @@ const char* token_type_to_string(TokenType type) {
 
 
 
-
 int main() {
-    // 1. Abrir o arquivo de código fonte
-    FILE* file = fopen("codigo.txt", "r"); // Abre "codigo.txt" para leitura [cite: 2]
+    FILE* file = fopen("codigo.txt", "r");
     if (file == NULL) {
-        // Trata erro se o arquivo não puder ser aberto
-        printf("Erro ao abrir o arquivo 'codigo.txt'.\n"); // [cite: 2]
-        return 1; // Termina o programa com um código de erro
+        printf("Erro ao abrir o arquivo.\n");
+        return 1;
     }
 
-    // 2. Ler o conteúdo do arquivo
-    // MAX_SOURCE_SIZE é definido em analisador.h [cite: 1]
-    char source[MAX_SOURCE_SIZE]; 
-    int length = fread(source, 1, MAX_SOURCE_SIZE - 1, file); // Lê o arquivo para o buffer 'source' [cite: 2]
-    source[length] = '\0'; // Adiciona o terminador nulo para formar uma string C válida [cite: 2]
+    char source[MAX_SOURCE_SIZE];
+    int length = fread(source, 1, MAX_SOURCE_SIZE - 1, file);
+    source[length] = '\0'; // garante o final da string
+    fclose(file);
 
-    // 3. Fechar o arquivo
-    fclose(file); // [cite: 2]
+    int index = 0;
+    Token token;
 
-    // 4. Iniciar a análise sintática (parsing)
-    // A variável global 'current_pos' (de analisador.h) é usada pelo lexer
-    // e parser para rastrear a posição. Pode ser bom garantir que ela comece em {1,1}.
-    // A função 'parse_program' em parser.c também pode inicializar isso.
-    // No seu 'analisador.c', 'current_pos' é global e inicializada.
-    // No 'parser.c' que forneci, 'current_pos' é resetada no início de 'parse_program'.
+    while (token.type != TOKEN_EOF) {
+        token = next_token(source, &index);
+        printf("Token: %-30s | Tipo: %-15s | Linha: %-4d | Coluna: %-4d\n", 
+               token.lexeme, token_type_to_string(token.type), token.line, token.column);
+    }
 
-    parse_program(source); // Chama a função principal do parser com o código lido [cite: 2]
-
-    // O loop antigo de impressão de tokens que você comentou pode continuar comentado,
-    // já que 'parse_program' agora cuida de reportar o sucesso ou erros.
-
-    return 0; // Indica que o programa terminou com sucesso
+    return 0;
 }
