@@ -1,12 +1,12 @@
-int x2 = 10;
-float y = 3.14;
-char c = 'a';
-if (x == 10) {
-    // simples
-    /* em bloco */
-    printf("Texto");
-    for(int i = 0; i < x; i++){
-       //'laço'
-    }
+int contador;
 
+fun dobrar(int x) {
+    return x * 2;
 }
+
+main {
+    int resultado;
+    resultado = dobrar(5);
+}
+
+//exemplo com fun, global e main
