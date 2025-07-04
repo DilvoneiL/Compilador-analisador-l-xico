@@ -1,12 +1,30 @@
-int contador;
+// Exemplo de código para testar o compilador
 
-fun dobrar(int x) {
-    return x * 2;
+int modificador_global;
+
+fun maior(int a, int b) {
+    if (a > b) {
+        return a;
+    } else {
+        return b;
+    }
 }
 
 main {
+    int valor1;
+    int valor2;
     int resultado;
-    resultado = dobrar(5);
-}
 
-//exemplo com fun, global e main
+    valor1 = 15;
+    int valor1;
+    valor2 = 30;
+    modificador_global = 10;
+
+    resultado = maior(valor1, valor2) + modificador_global;
+
+    int valor_final;
+    valor_final = resultado + (2 * 5);
+
+    // <<< Usando a nova função nativa para imprimir o resultado >>>
+    print(valor_final);
+}
