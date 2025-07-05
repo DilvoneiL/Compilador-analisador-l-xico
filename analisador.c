@@ -41,19 +41,17 @@ static int is_keyword(const char* str) {
 Token next_token(const char* src, int* index) {
     // Pular espaços em branco e comentários
     while (1) {
-        // Pula espaços em branco
         while (isspace(src[*index])) {
             update_position(src[*index]);
             (*index)++;
         }
 
-        // Verifica e pula comentários
         if (src[*index] == '/' && src[*index + 1] == '/') {
             while (src[*index] != '\n' && src[*index] != '\0') {
                 update_position(src[*index]);
                 (*index)++;
             }
-            continue; // Volta ao início para pular mais espaços/comentários
+            continue;
         }
         if (src[*index] == '/' && src[*index + 1] == '*') {
             (*index) += 2;
@@ -66,9 +64,9 @@ Token next_token(const char* src, int* index) {
                 (*index) += 2;
                 update_position('*'); update_position('/');
             }
-            continue; // Volta ao início
+            continue;
         }
-        break; // Sai do loop se não for espaço em branco nem comentário
+        break;
     }
 
     Position start_pos = current_pos;
@@ -82,6 +80,28 @@ Token next_token(const char* src, int* index) {
 
     char lexeme_buffer[100] = {0};
     int i = 0;
+
+    // <<< CORREÇÃO PRINCIPAL: Lógica para Strings >>>
+    if (src[*index] == '"') {
+        token.type = TOKEN_STRING;
+        lexeme_buffer[i++] = src[*index]; // Guarda a aspa inicial
+        update_position(src[(*index)++]);
+
+        while (src[*index] != '"' && src[*index] != '\0') {
+            if (i < 98) { // Evita overflow
+                lexeme_buffer[i++] = src[(*index)];
+            }
+            update_position(src[(*index)++]);
+        }
+
+        if (src[*index] == '"') {
+            lexeme_buffer[i++] = src[*index]; // Guarda a aspa final
+            update_position(src[(*index)++]);
+        }
+        strcpy(token.lexeme, lexeme_buffer);
+        return token;
+    }
+
 
     if (is_letter(src[*index])) {
         while (is_letter(src[*index]) || is_digit(src[*index])) {

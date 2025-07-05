@@ -3,8 +3,9 @@
 
 #include "ast.h"
 
+// <<< MODIFICAÇÃO: Adicionado TYPE_STRING >>>
 typedef enum {
-    TYPE_INT, TYPE_FLOAT, TYPE_CHAR, TYPE_VOID, TYPE_FUNCTION, TYPE_UNKNOWN
+    TYPE_INT, TYPE_FLOAT, TYPE_CHAR, TYPE_STRING, TYPE_VOID, TYPE_FUNCTION, TYPE_UNKNOWN
 } DataType;
 
 typedef struct Symbol {

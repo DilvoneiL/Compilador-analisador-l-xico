@@ -14,12 +14,14 @@ static const char* source_code_ptr;
 static int current_parser_index;
 static int main_block_found_flag;
 
-
-// --- Protótipos de Funções de Parsing ---
+// --- Protótipos de Funções ---
 static void advance_and_skip_comments();
 static int token_is(TokenType type, const char* lexeme);
 static void eat(TokenType type, const char* expected_lexeme);
 static void syntax_error(const char* message);
+static char* safe_strdup(const char* s);
+static ASTNode* parse_expression();
+static ASTNode* parse_primary_expression();
 static ASTNode* parse_top_level_declaration();
 static ASTNode* parse_variable_declaration();
 static ASTNode* parse_standard_function_definition();
@@ -33,7 +35,6 @@ static ASTNode* parse_if_statement();
 static ASTNode* parse_for_statement();
 static ASTNode* parse_return_statement();
 static ASTNode* parse_block_statement();
-static ASTNode* parse_expression();
 static ASTNode* parse_assignment_expression();
 static ASTNode* parse_logical_or_expression();
 static ASTNode* parse_logical_and_expression();
@@ -42,22 +43,9 @@ static ASTNode* parse_relational_expression();
 static ASTNode* parse_additive_expression();
 static ASTNode* parse_multiplicative_expression();
 static ASTNode* parse_unary_expression();
-static ASTNode* parse_primary_expression();
 static ASTNodeList* parse_argument_list();
 
-// <<< CORREÇÃO: Função auxiliar para verificar strdup >>>
-static char* safe_strdup(const char* s) {
-    if (!s) return NULL;
-    char* new_s = strdup(s);
-    if (!new_s) {
-        fprintf(stderr, "Erro de Memória: falha ao alocar memória.\n");
-        exit(EXIT_FAILURE);
-    }
-    return new_s;
-}
-
-// --- Implementação das Funções de Manipulação da AST ---
-
+// (Implementação de create_node, free_ast, etc. permanece a mesma)
 ASTNode* create_node(NodeType type, Position pos) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
     if (!node) {
@@ -256,14 +244,17 @@ void print_ast(ASTNode* node, int indent) {
         case NODE_INT_LITERAL:
             printf("Int: %d\n", node->data.int_literal);
             break;
+        case NODE_STRING_LITERAL:
+             printf("String: %s\n", node->data.string_literal);
+             break;
         default:
             printf("Nó Desconhecido\n");
             break;
     }
 }
 
-// --- Implementação das Funções de Controle do Parser ---
 
+// --- Funções de Controlo do Parser ---
 static void advance_and_skip_comments() {
     do {
         current_token = next_token(source_code_ptr, &current_parser_index);
@@ -305,6 +296,16 @@ static void syntax_error(const char* message) {
     fprintf(stderr, "\nErro Sintático (Linha %d, Coluna %d): %s\n",
             current_token.line, current_token.column, message);
     exit(EXIT_FAILURE);
+}
+
+static char* safe_strdup(const char* s) {
+    if (!s) return NULL;
+    char* new_s = strdup(s);
+    if (!new_s) {
+        fprintf(stderr, "Erro de Memória: falha ao alocar memória.\n");
+        exit(EXIT_FAILURE);
+    }
+    return new_s;
 }
 
 // --- Implementação das Funções de Parsing ---
@@ -640,6 +641,7 @@ static ASTNode* parse_unary_expression() {
     return parse_primary_expression();
 }
 
+// <<< FUNÇÃO MODIFICADA >>>
 static ASTNode* parse_primary_expression() {
     Position pos = { .line = current_token.line, .column = current_token.column };
     if (token_is(TOKEN_INT, NULL)) {
@@ -652,6 +654,21 @@ static ASTNode* parse_primary_expression() {
         ASTNode* node = create_node(NODE_FLOAT_LITERAL, pos);
         node->data.float_literal = atof(current_token.lexeme);
         eat(TOKEN_FLOAT, NULL);
+        return node;
+    }
+    if (token_is(TOKEN_STRING, NULL)) {
+        ASTNode* node = create_node(NODE_STRING_LITERAL, pos);
+        // Remove as aspas do início e do fim
+        int len = strlen(current_token.lexeme);
+        if (len > 1) {
+            char* str_content = (char*)malloc(len - 1);
+            strncpy(str_content, current_token.lexeme + 1, len - 2);
+            str_content[len - 2] = '\0';
+            node->data.string_literal = str_content;
+        } else {
+            node->data.string_literal = safe_strdup(""); // String vazia
+        }
+        eat(TOKEN_STRING, NULL);
         return node;
     }
     if (token_is(TOKEN_IDENTIFIER, NULL)) {

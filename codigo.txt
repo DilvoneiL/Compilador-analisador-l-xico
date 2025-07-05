@@ -18,8 +18,9 @@ main {
     valor1 = 15;
     valor2 = 30;
     modificador_global = 10;
-
+    
     resultado = maior(valor1, valor2) + modificador_global;
+    print("Chamada da função");
 
     int valor_final;
     valor_final = resultado + (2 * 5);

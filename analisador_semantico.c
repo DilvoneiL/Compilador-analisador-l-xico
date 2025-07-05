@@ -23,7 +23,7 @@ static DataType get_expression_type(ASTNode* node);
 
 void analyze_semantics(ASTNode* root) {
     init_symbol_table();
-    semantic_error_count = 0; // Zera o contador para uma nova análise
+    semantic_error_count = 0;
     visit_node(root);
 }
 
@@ -31,6 +31,7 @@ static void visit_node(ASTNode* node) {
     if (!node) return;
 
     switch (node->type) {
+        // (outros casos permanecem os mesmos)
         case NODE_PROGRAM:
             enter_scope();
             for (ASTNodeList* l = node->data.program.declarations; l; l = l->next) visit_node(l->node);
@@ -45,7 +46,6 @@ static void visit_node(ASTNode* node) {
             exit_scope();
             break;
         case NODE_VAR_DECL: {
-            // Verifica se o símbolo já existe ANTES de o adicionar
             if (lookup_symbol_in_current_scope(node->data.var_decl.var_name)) {
                 char msg[256];
                 sprintf(msg, "Redeclaração do identificador '%s'.", node->data.var_decl.var_name);
@@ -126,6 +126,15 @@ static void visit_node(ASTNode* node) {
                 sprintf(msg, "'%s' não é uma função.", node->data.func_call.func_name);
                 semantic_error(msg, node->pos.line, node->pos.column);
             }
+            // <<< MODIFICAÇÃO: Validação flexível para print >>>
+            if (strcmp(node->data.func_call.func_name, "print") == 0) {
+                if (node->data.func_call.args) {
+                    DataType arg_type = get_expression_type(node->data.func_call.args->node);
+                    if (arg_type != TYPE_INT && arg_type != TYPE_STRING) {
+                        semantic_error("Função 'print' só aceita inteiros ou strings.", node->pos.line, node->pos.column);
+                    }
+                }
+            }
             for (ASTNodeList* l = node->data.func_call.args; l; l = l->next) visit_node(l->node);
             break;
         }
@@ -151,6 +160,8 @@ static DataType get_expression_type(ASTNode* node) {
         case NODE_INT_LITERAL: return TYPE_INT;
         case NODE_FLOAT_LITERAL: return TYPE_FLOAT;
         case NODE_CHAR_LITERAL: return TYPE_CHAR;
+        // <<< MODIFICAÇÃO: Adicionado suporte para strings >>>
+        case NODE_STRING_LITERAL: return TYPE_STRING;
         case NODE_IDENTIFIER: {
             Symbol* symbol = lookup_symbol(node->data.identifier_name);
             return symbol ? symbol->type : TYPE_UNKNOWN;

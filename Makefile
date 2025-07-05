@@ -30,7 +30,10 @@ clean:
 
 # <<< CORREÇÃO: O comando 'run' agora executa o script Python >>>
 run: all
+	# Passo 1: Executa o seu compilador para gerar o output.py
 	./$(TARGET) codigo.txt
+	
+	# Passo 2: Executa o script
 	@echo "\n--- Executando o script Python gerado (output.py)... ---"
 	python3 output.py
 
