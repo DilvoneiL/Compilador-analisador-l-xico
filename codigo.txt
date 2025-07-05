@@ -16,7 +16,6 @@ main {
     int resultado;
 
     valor1 = 15;
-    int valor1;
     valor2 = 30;
     modificador_global = 10;
 

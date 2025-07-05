@@ -24,16 +24,14 @@ $(TARGET): $(OBJECTS)
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Regra de limpeza: remove os arquivos gerados (objetos e o executável)
+# Regra de limpeza: remove os arquivos gerados
 clean:
-	rm -f $(OBJECTS) $(TARGET) output.c meu_programa
+	rm -f $(OBJECTS) $(TARGET) output.py
 
-# Comando para rodar todo o processo: compila, executa, compila a saída e roda o final
+# <<< CORREÇÃO: O comando 'run' agora executa o script Python >>>
 run: all
 	./$(TARGET) codigo.txt
-	@echo "\n--- Compilando o código C gerado (output.c)... ---"
-	$(CC) output.c -o meu_programa
-	@echo "--- Executando o programa final (meu_programa)... ---"
-	./meu_programa
+	@echo "\n--- Executando o script Python gerado (output.py)... ---"
+	python3 output.py
 
 .PHONY: all clean run

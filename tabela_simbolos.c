@@ -8,7 +8,6 @@
 static Symbol* symbol_table[TABLE_SIZE];
 static int current_scope_level = 0;
 
-// Protótipo para a nova função
 static void populate_builtins();
 
 static unsigned long hash_function(const char* str) {
@@ -72,12 +71,8 @@ void exit_scope() {
 }
 
 void add_symbol(const char* name, DataType type, ASTNode* node) {
-    // Para a função 'print', o nó é NULL, então não podemos verificar a posição.
-    if (node && lookup_symbol_in_current_scope(name) != NULL) {
-        fprintf(stderr, "Erro Semântico (Linha %d, Coluna %d): Redeclaração do identificador '%s'.\n",
-                node->pos.line, node->pos.column, name);
-        exit(EXIT_FAILURE);
-    }
+    // <<< CORREÇÃO: A verificação de erro foi movida para o analisador semântico >>>
+    // Apenas adiciona o símbolo
     
     printf("INFO (Tabela de Símbolos): Adicionando símbolo '%s' (tipo: %s) ao escopo %d\n", name, datatype_to_string(type), current_scope_level);
 
@@ -140,6 +135,5 @@ const char* datatype_to_string(DataType type) {
 }
 
 static void populate_builtins() {
-    // Adiciona a função 'print(int)'
     add_symbol("print", TYPE_FUNCTION, NULL);
 }

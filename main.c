@@ -20,7 +20,6 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // Ler o conteúdo do arquivo para um buffer
     fseek(file, 0, SEEK_END);
     long length = ftell(file);
     fseek(file, 0, SEEK_SET);
@@ -34,33 +33,32 @@ int main(int argc, char *argv[]) {
     source_code[length] = '\0';
     fclose(file);
 
-    // --- FASE 1 e 2: Análise Léxica e Sintática (Parsing para construir a AST) ---
     printf("Iniciando Fase 1 e 2: Análise Léxica e Sintática...\n");
     ASTNode* ast_root = parse_program(source_code);
     printf("Análise Sintática concluída. AST construída.\n\n");
     
-    // --- FASE 3: Análise Semântica ---
     printf("Iniciando Fase 3: Análise Semântica...\n");
     analyze_semantics(ast_root);
+    
+    int error_count = get_semantic_error_count();
+    if (error_count > 0) {
+        fprintf(stderr, "\nCompilação falhou com %d erro(s) semântico(s).\n", error_count);
+        free_ast(ast_root);
+        free(source_code);
+        return 1;
+    }
     printf("Análise Semântica concluída com sucesso.\n\n");
 
-    // --- FASE 4: Otimização ---
     printf("Iniciando Fase 4: Otimização (Constant Folding)...\n");
     optimize_ast(ast_root);
     printf("Otimização concluída.\n\n");
 
-    // Opcional: Imprimir a AST otimizada para ver os resultados
-    printf("--- Árvore Sintática Abstrata (Após Otimização) ---\n");
-    print_ast(ast_root, 0);
-    printf("---------------------------------------------------\n\n");
-
-    // --- FASE 5: Geração de Código ---
-    printf("Iniciando Fase 5: Geração de Código (Transpilando para C)...\n");
-    generate_code(ast_root, "output.c");
+    // <<< CORREÇÃO: Alterado o nome do ficheiro de saída e a mensagem >>>
+    printf("Iniciando Fase 5: Geração de Código (Transpilando para Python)...\n");
+    generate_code(ast_root, "output.py");
     
     printf("\nCompilação concluída com sucesso!\n");
 
-    // Liberar memória
     free_ast(ast_root);
     free(source_code);
 
