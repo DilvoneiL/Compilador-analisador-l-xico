@@ -3,28 +3,44 @@
 int modificador_global;
 
 fun maior(int a, int b) {
+    print("Entrando na função maior");
     if (a > b) {
+        print("a é maior que b");
         return a;
     } else {
+        print("b é maior ou igual a a");
         return b;
     }
 }
 
 main {
+    print("Início da função main");
+
     int valor1;
     int valor2;
     int resultado;
 
+    print("Atribuindo valor1 = 15");
     valor1 = 15;
-    valor2 = 30;
-    modificador_global = 10;
-    
-    resultado = maior(valor1, valor2) + modificador_global;
-    print("Chamada da função");
 
+    print("Atribuindo valor2 = 30");
+    valor2 = 30;
+
+    print("Atribuindo modificador_global = 10");
+    modificador_global = 10;
+
+    print("Chamando a função maior(valor1, valor2)");
+    resultado = maior(valor1, valor2) + modificador_global;
+
+    print("Resultado da função maior + modificador_global: ");
+    print(resultado);
+
+    print("Atribuindo valor_final = resultado + (2 * 5)");
     int valor_final;
     valor_final = resultado + (2 * 5);
 
-    // <<< Usando a nova função nativa para imprimir o resultado >>>
+    print("Valor final calculado:");
     print(valor_final);
+
+    print("Fim da função main");
 }
