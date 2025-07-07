@@ -48,10 +48,14 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     printf("Análise Semântica concluída com sucesso.\n\n");
-
+    printf("--- Árvore ANTES da otimização ---\n");
+    print_ast(ast_root, 0);
+    
     printf("Iniciando Fase 4: Otimização (Constant Folding)...\n");
     optimize_ast(ast_root);
     printf("Otimização concluída.\n\n");
+    printf("\n--- Árvore DEPOIS da otimização ---\n");
+    print_ast(ast_root, 0);
 
     // <<< CORREÇÃO: Alterado o nome do ficheiro de saída e a mensagem >>>
     printf("Iniciando Fase 5: Geração de Código (Transpilando para Python)...\n");
